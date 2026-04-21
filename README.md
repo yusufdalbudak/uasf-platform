@@ -116,14 +116,20 @@ The correct production topology is **split deployment**:
 
 ### Deploying the frontend on Vercel
 
-1. Import the repository into Vercel. The root-level `vercel.json` pins the build to `frontend/` and configures SPA hosting with secure headers.
-2. Choose **one** of the two API-routing modes:
+On the Vercel "Import Project" screen you must explicitly tell Vercel this is a single Vite app, **not** a multi-service monorepo. Vercel's "Services" auto-preset would otherwise try to build `backend/` too, which is not serverless-compatible (see "Architectural reality" above).
 
-   **Mode A — Same-origin via Vercel rewrite (recommended).** Edit `vercel.json` and replace the placeholder `BACKEND_PUBLIC_HOST_REPLACE_ME` in the `/api/:path*` rewrite destination with your backend's public hostname (e.g. `api.uasf.example.com`). Leave `VITE_API_URL` **unset** in Vercel. The browser sees same-origin traffic, so no CORS or cross-site-cookie gymnastics are needed.
+1. Import the repository into Vercel.
+2. In the import UI:
+   - **Application Preset** — change from `Services` to **`Vite`**.
+   - **Root Directory** — set to **`frontend`**.
+   - Leave build/install commands at their Vercel-provided defaults (the `frontend/vercel.json` in the repo handles the rest).
+3. Choose **one** of the two API-routing modes:
+
+   **Mode A — Same-origin via Vercel rewrite (recommended).** Edit `frontend/vercel.json` and replace the placeholder `BACKEND_PUBLIC_HOST_REPLACE_ME` in the `/api/:path*` rewrite destination with your backend's public hostname (e.g. `api.uasf.example.com`). Leave `VITE_API_URL` **unset** in Vercel. The browser sees same-origin traffic, so no CORS or cross-site-cookie gymnastics are needed.
 
    **Mode B — Direct cross-origin to the backend.** Remove (or leave un-edited) the rewrite and instead set the Vercel build env var `VITE_API_URL=https://api.example.com/api`. Then on the backend set `FRONTEND_ORIGIN=https://<your-vercel-domain>` (comma-separated list is supported for multiple origins) and `COOKIE_SECURE=true`.
 
-3. Deploy. Vercel will run `cd frontend && npm ci && npm run build` and publish `frontend/dist`.
+4. Deploy. Vercel will run `npm ci && npm run build` inside `frontend/` and publish `frontend/dist`. The root-level `.vercelignore` excludes `backend/`, `shared/`, `docker-compose.yml`, and `.env*` from the deployment regardless of which Root Directory you pick.
 
 ### Deploying the backend
 

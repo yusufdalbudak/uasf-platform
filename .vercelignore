@@ -1,0 +1,10 @@
+# Only the frontend deploys to Vercel. The Fastify backend runs on a
+# persistent host (BullMQ worker, setInterval schedulers, nmap, pdfkit,
+# 60-120s scans — not serverless-compatible). See README "Production
+# deployment" for the split-deployment topology.
+backend/
+shared/
+docker-compose.yml
+.env
+.env.local
+.env.*.local
