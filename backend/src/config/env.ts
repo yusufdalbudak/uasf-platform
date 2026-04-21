@@ -109,11 +109,36 @@ export const env = {
   requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === 'true',
 
   /**
-   * Allowed origin for the frontend. Used to restrict CORS so cookies are
-   * only ever sent from the legitimate web app. Defaults to the Vite dev
-   * server in development.
+   * Allowed origin(s) for the frontend. Used to restrict CORS so cookies are
+   * only ever sent from the legitimate web app(s). Accepts a single origin or
+   * a comma-separated list (e.g. production + Vercel preview URL). Defaults
+   * to the Vite dev server in development; REQUIRED in production.
+   *
+   * Example:
+   *   FRONTEND_ORIGIN=https://uasf.example.com,https://uasf-preview.vercel.app
    */
-  frontendOrigin: (process.env.FRONTEND_ORIGIN || 'http://localhost:5173').trim(),
+  frontendOrigin: (() => {
+    const raw = (process.env.FRONTEND_ORIGIN || '').trim();
+    if (raw) return raw;
+    if ((process.env.NODE_ENV || 'development') === 'production') {
+      throw new Error(
+        'Missing required environment variable in production: FRONTEND_ORIGIN ' +
+          '(set it to the deployed web origin(s), comma-separated; cookies and CORS depend on this).',
+      );
+    }
+    return 'http://localhost:5173';
+  })(),
+
+  /**
+   * Derived list of allowed origins (lowercase, no trailing slash).
+   */
+  frontendOrigins: (() => {
+    const raw = (process.env.FRONTEND_ORIGIN || '').trim() || 'http://localhost:5173';
+    return raw
+      .split(',')
+      .map((s) => s.trim().replace(/\/$/, ''))
+      .filter((s) => s.length > 0);
+  })(),
 
   /**
    * Bootstraps a single admin user when no users exist in the DB. Disable

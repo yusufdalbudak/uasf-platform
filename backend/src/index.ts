@@ -33,14 +33,21 @@ async function main() {
     // credentials so the refresh-token cookie flows correctly. We do NOT
     // accept arbitrary origins because the API serves an auth-cookie that
     // must not be exfiltrated by other sites.
+    // CORS is restricted to the configured frontend origin(s) and allows
+    // credentials so the refresh-token cookie flows correctly. We do NOT
+    // accept arbitrary origins because the API serves an auth-cookie that
+    // must not be exfiltrated by other sites. `FRONTEND_ORIGIN` may be a
+    // comma-separated list (e.g. production URL + Vercel preview URL).
+    const allowedOrigins = new Set(env.frontendOrigins.map((o) => o.toLowerCase()));
     await server.register(cors, {
       origin: (origin, cb) => {
         // Same-origin / curl / server-to-server requests have no Origin header.
         if (!origin) return cb(null, true);
-        if (origin === env.frontendOrigin) return cb(null, true);
+        const normalized = origin.toLowerCase().replace(/\/$/, '');
+        if (allowedOrigins.has(normalized)) return cb(null, true);
         // In dev, also allow localhost on the standard Vite ports so
         // `npm run dev` from a different port still works.
-        if (env.nodeEnv !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) {
+        if (env.nodeEnv !== 'production' && /^http:\/\/localhost:\d+$/.test(normalized)) {
           return cb(null, true);
         }
         return cb(new Error('Origin not allowed by CORS policy.'), false);

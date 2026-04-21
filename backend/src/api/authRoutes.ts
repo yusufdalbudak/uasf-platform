@@ -38,10 +38,22 @@ import { User } from '../db/models/User';
  */
 
 function refreshCookieOpts(): Parameters<FastifyReply['setCookie']>[2] {
+  // Cross-origin split deployments (e.g. Vercel-hosted frontend + backend on
+  // a separate host) require `SameSite=None; Secure` on the refresh cookie
+  // so the browser will actually send it on cross-origin fetches. Same-origin
+  // deployments (reverse proxy / Vercel rewrite) keep the safer `lax`.
+  // `COOKIE_SAMESITE=none|lax|strict` overrides the auto choice when needed.
+  const override = (process.env.COOKIE_SAMESITE || '').trim().toLowerCase();
+  const sameSite: 'none' | 'lax' | 'strict' =
+    override === 'none' || override === 'lax' || override === 'strict'
+      ? override
+      : env.cookieSecure
+        ? 'none'
+        : 'lax';
   return {
     httpOnly: true,
-    secure: env.cookieSecure,
-    sameSite: 'lax',
+    secure: env.cookieSecure || sameSite === 'none',
+    sameSite,
     // Scope the cookie to the auth subtree so it's never sent to other API
     // routes; the access token (in the Authorization header) is what
     // protected endpoints rely on.
