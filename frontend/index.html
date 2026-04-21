@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UASF — Universal Attack Simulation Framework</title>
+    <script>
+      // Pre-React theme bootstrap. Applies the user's previously chosen
+      // light/dark/system theme to <html> *before* the first paint, so
+      // we never flash dark theme on top of a light-theme operator's
+      // session (or vice versa). Mirrors logic in src/theme/ThemeContext.
+      (function () {
+        try {
+          var v = localStorage.getItem('uasf:theme');
+          var resolved = v === 'light' ? 'light'
+            : v === 'dark' ? 'dark'
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.classList.add('theme-' + resolved);
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

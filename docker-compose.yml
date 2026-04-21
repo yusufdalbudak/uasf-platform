@@ -1,0 +1,116 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: waap-platform-db
+    environment:
+      POSTGRES_USER: waap_user
+      POSTGRES_PASSWORD: waap_password
+      POSTGRES_DB: waap_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U waap_user -d waap_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: waap-platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: waap-platform-backend
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgres://waap_user:waap_password@db:5432/waap_platform
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Safety limits: hard limits that cannot be bypassed via UI
+      - SAFETY_MAX_CONCURRENCY=5
+      - SAFETY_MAX_RPS=50
+      # Comma-separated hostnames and AppTrana labels; only these may receive outbound validation traffic
+      - ALLOWED_TARGETS=juiceshopnew.testapptrana.net_API,juiceshopnew.testapptrana.net,brokencrystals.com,vulnhub.com,www.vulnhub.com
+      # Executable workflows require a matching approved row in the asset registry (set false only for legacy demos)
+      - REQUIRE_REGISTERED_ASSET=true
+      # Optional VirusTotal Public API v3 key, sourced from the root .env file
+      # (gitignored). When unset, the backend returns 503 from /api/virustotal/* and
+      # the UI falls back to opening virustotal.com in a new tab.
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY:-}
+      # Optional abuse.ch Auth-Key (single key covers ThreatFox, URLhaus, and
+      # MalwareBazaar). Get a free key at https://auth.abuse.ch/. When unset,
+      # those providers are reported as "not configured" by /api/lookup/status.
+      - ABUSE_CH_AUTH_KEY=${ABUSE_CH_AUTH_KEY:-}
+      # ---------------------------------------------------------------
+      # IAM / authentication (see backend/src/config/env.ts for full list)
+      # ---------------------------------------------------------------
+      # Pin these in production so JWTs survive restarts. When unset the
+      # server boots with a random secret (dev only).
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-}
+      - REFRESH_TOKEN_PEPPER=${REFRESH_TOKEN_PEPPER:-}
+      # Origin allowed by CORS (must match the frontend URL).
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-http://localhost:5173}
+      # Optional one-shot bootstrap of the first admin account. When unset,
+      # the FIRST account that signs up via /signup automatically becomes
+      # admin (idempotent: bootstrap is skipped if any users exist).
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:-}
+      # Cookie security: leave false in dev (HTTP), set true in production (HTTPS).
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      # Auth gate: keep true in production. Set to false ONLY for legacy demos.
+      - AUTH_REQUIRED=${AUTH_REQUIRED:-true}
+      # When true, signup goes through email verification before login.
+      # Disabled by default since the platform doesn't ship an SMTP integration.
+      - REQUIRE_EMAIL_VERIFICATION=${REQUIRE_EMAIL_VERIFICATION:-false}
+    ports:
+      - "3001:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+      - /app/backend/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: waap-platform-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - ./shared:/app/shared
+      - /app/frontend/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+
+volumes:
+  pgdata:
+  redisdata:

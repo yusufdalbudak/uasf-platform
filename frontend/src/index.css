@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@import "./theme/themeOverrides.css";
+
+@theme {
+  --color-apptrana: #6a2bba;
+  --color-apptrana-dark: #4d1c8c;
+  --color-apptrana-light: #8e51df;
+  
+  --color-bg-dark: #0f1115;
+  --color-panel: #1a1d24;
+  --color-border: #2d333b;
+  --color-text-main: #e2e8f0;
+  --color-text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hud-panel {
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar for dashboard */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-apptrana); 
+}

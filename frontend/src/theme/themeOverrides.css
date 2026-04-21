@@ -1,0 +1,291 @@
+/*
+ * UASF Light-Theme Overlay
+ *
+ * The app's component tree was authored against a fixed dark palette
+ * using literal Tailwind 4 arbitrary-value classes such as
+ * `bg-[#0f1115]`, `text-white`, `border-[#2d333b]`, etc.  Migrating
+ * every page to use semantic theme tokens would be a ~30-page refactor
+ * with high regression risk on a production-bound surface.
+ *
+ * Instead, this overlay remaps the most-used dark palette literals to
+ * a coherent light palette whenever the document is in light theme
+ * (`<html data-theme="light">`).  The mapping is intentionally
+ * conservative — only well-known neutral colours get overridden so
+ * status accents (purple gradient, severity colours, success greens,
+ * danger reds, warning ambers) keep their semantic meaning in both
+ * themes.
+ *
+ * Maintenance rules:
+ *   - Only add overrides for *neutral* hex values (background panels,
+ *     borders, body text, muted greys).  Do NOT remap brand purple,
+ *     severity reds/oranges/blues, success greens, etc.
+ *   - Keep selectors specific (`[data-theme="light"]` prefix) and
+ *     scoped to the exact arbitrary-value class so we don't bleed
+ *     into intentional uses elsewhere.
+ *   - Use `!important` because Tailwind 4 utility classes are emitted
+ *     into the same cascade layer and we need to win regardless of
+ *     specificity ties.
+ */
+
+/* ===========================================================
+ * Document chrome
+ * =========================================================== */
+:root[data-theme='light'] body {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+:root[data-theme='light'] {
+  /* Pull custom-prop tokens defined in index.css into a light palette
+     so any component that does inherit from them flips automatically. */
+  --color-bg-dark: #f3f4f6;
+  --color-panel: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text-main: #111827;
+  --color-text-muted: #4b5563;
+}
+
+/* Native form controls + scrollbars follow the chosen colour scheme. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+/* ===========================================================
+ * Backgrounds — neutral surfaces
+ *
+ * Three tiers:
+ *   - "page"   → #f3f4f6  (the outermost canvas)
+ *   - "panel"  → #ffffff  (top-level cards, sidebars, modals)
+ *   - "sunken" → #f1f5f9  (insets: table rows, input wells, code blocks)
+ *
+ * NOTE: We previously only remapped a handful of hex literals.  Many
+ * cards in Campaigns / TechIntel / Runs use OTHER dark hexes
+ * (#11141a, #0d1016, #0f1218, #10131a, #171b23, #181c24, …).  Those
+ * panels stayed dark while the text on top got darkened to readable
+ * grey for a *light* background, which produced the unreadable
+ * "dark grey on near-black" effect the user reported.
+ * Below we cover every dark hex actually used in the codebase.
+ * =========================================================== */
+
+/* Page-level surface */
+:root[data-theme='light'] .bg-\[\#0f1115\],
+:root[data-theme='light'] .bg-\[\#0d0f14\] {
+  background-color: #f3f4f6 !important;
+}
+:root[data-theme='light'] .bg-\[\#0f1115\]\/80 {
+  background-color: rgba(243, 244, 246, 0.85) !important;
+}
+
+/* Top-level panels / cards (rounded-2xl hero cards, sidebar, modals) */
+:root[data-theme='light'] .bg-\[\#1a1d24\],
+:root[data-theme='light'] .bg-\[\#15181e\],
+:root[data-theme='light'] .bg-\[\#181c24\],
+:root[data-theme='light'] .bg-\[\#11141a\],
+:root[data-theme='light'] .bg-\[\#10131a\],
+:root[data-theme='light'] .bg-\[\#0f1218\],
+:root[data-theme='light'] .bg-\[\#0d1016\],
+:root[data-theme='light'] .bg-\[\#0b121a\] {
+  background-color: #ffffff !important;
+}
+:root[data-theme='light'] .bg-\[\#15181e\]\/80,
+:root[data-theme='light'] .bg-\[\#11141a\]\/80,
+:root[data-theme='light'] .bg-\[\#1a1d24\]\/80 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+:root[data-theme='light'] .bg-\[\#1a1d24\]\/70 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Sunken / inset surfaces (input wells, code blocks, sub-rows) */
+:root[data-theme='light'] .bg-\[\#0b0c10\],
+:root[data-theme='light'] .bg-\[\#171b23\] {
+  background-color: #f1f5f9 !important;
+}
+:root[data-theme='light'] .bg-\[\#0b0c10\]\/60,
+:root[data-theme='light'] .bg-\[\#0b0c10\]\/70 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+:root[data-theme='light'] .bg-\[\#171b23\]\/70 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+
+/* Heavier neutral pill */
+:root[data-theme='light'] .bg-\[\#1e232b\],
+:root[data-theme='light'] .bg-\[\#2d333b\] {
+  background-color: #e5e7eb !important;
+}
+
+/* Brand-tinted dark (#1a1330 = deep purple wash) */
+:root[data-theme='light'] .bg-\[\#1a1330\] {
+  background-color: rgba(106, 43, 186, 0.06) !important;
+}
+
+/* Legacy aliases kept for backwards compatibility */
+:root[data-theme='light'] .bg-\[\#11151c\] {
+  background-color: #ffffff !important;
+}
+:root[data-theme='light'] .bg-\[\#1c2128\] {
+  background-color: #f3f4f6 !important;
+}
+
+/* Hover states */
+:root[data-theme='light'] .hover\:bg-\[\#1e232b\]:hover {
+  background-color: #e5e7eb !important;
+}
+:root[data-theme='light'] .hover\:bg-\[\#2d333b\]\/50:hover {
+  background-color: rgba(229, 231, 235, 0.7) !important;
+}
+:root[data-theme='light'] .hover\:bg-\[\#15181e\]\/80:hover,
+:root[data-theme='light'] .hover\:bg-\[\#1a1d24\]\/70:hover,
+:root[data-theme='light'] .hover\:bg-\[\#1a1d24\]\/80:hover,
+:root[data-theme='light'] .hover\:bg-\[\#11141a\]:hover,
+:root[data-theme='light'] .hover\:bg-\[\#171b23\]\/70:hover {
+  background-color: #f3f4f6 !important;
+}
+:root[data-theme='light'] .hover\:bg-\[\#0f1115\]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* ===========================================================
+ * Borders
+ * =========================================================== */
+:root[data-theme='light'] .border-\[\#2d333b\],
+:root[data-theme='light'] .border-\[\#3b4451\],
+:root[data-theme='light'] .border-\[\#3d434b\] {
+  border-color: #e5e7eb !important;
+}
+:root[data-theme='light'] .border-\[\#2d333b\]\/30,
+:root[data-theme='light'] .border-\[\#2d333b\]\/40,
+:root[data-theme='light'] .border-\[\#2d333b\]\/50,
+:root[data-theme='light'] .border-\[\#2d333b\]\/60,
+:root[data-theme='light'] .border-\[\#2d333b\]\/70 {
+  border-color: rgba(229, 231, 235, 0.85) !important;
+}
+:root[data-theme='light'] .border-b.border-\[\#2d333b\] {
+  border-color: #e5e7eb !important;
+}
+
+/* ===========================================================
+ * Text colours
+ *
+ * Tier these so headings (currently text-white / #e2e8f0) are darker
+ * and "muted" greys (currently #94a3b8 / #64748b) stay legible without
+ * collapsing into the same shade as the heading.
+ * =========================================================== */
+:root[data-theme='light'] .text-white {
+  color: #0f172a !important;
+}
+:root[data-theme='light'] .text-\[\#e2e8f0\],
+:root[data-theme='light'] .text-\[\#dbe4f0\] {
+  color: #111827 !important;
+}
+:root[data-theme='light'] .text-\[\#cbd5e1\],
+:root[data-theme='light'] .text-\[\#a1a1aa\] {
+  color: #1f2937 !important;
+}
+:root[data-theme='light'] .text-\[\#94a3b8\] {
+  color: #475569 !important;
+}
+:root[data-theme='light'] .text-\[\#64748b\],
+:root[data-theme='light'] .text-\[\#475569\] {
+  color: #64748b !important;
+}
+
+/* Brand-purple tints used for selected pill text — keep them on a
+   darker shade so they don't disappear on the light pill background. */
+:root[data-theme='light'] .text-\[\#c4a8f0\],
+:root[data-theme='light'] .text-\[\#c4a8ee\],
+:root[data-theme='light'] .text-\[\#a875e8\],
+:root[data-theme='light'] .text-\[\#a78bfa\],
+:root[data-theme='light'] .text-\[\#a372eb\] {
+  color: #6a2bba !important;
+}
+
+/* Severity foreground that uses fda4af (rose-300). */
+:root[data-theme='light'] .text-\[\#fda4af\] {
+  color: #b91c1c !important;
+}
+
+/* When a hover state turns text white, make it stay readable on the
+   light hover surface instead of becoming invisible. */
+:root[data-theme='light'] .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Placeholders inside light input wells */
+:root[data-theme='light'] .placeholder\:text-\[\#64748b\]::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Brand accents stay the same — purple is identity colour. */
+/* (We intentionally do NOT remap text-[#8e51df] / [#6a2bba] / [#4d1c8c].) */
+
+/* ===========================================================
+ * Status / severity colours
+ *
+ * Only soften the *background tints* that look harsh on a white
+ * surface.  Foreground severity ink stays the same so the visual
+ * meaning (red = critical, amber = high, etc.) survives the theme
+ * switch.
+ * =========================================================== */
+:root[data-theme='light'] .bg-rose-500\/10 {
+  background-color: rgba(244, 63, 94, 0.08) !important;
+}
+:root[data-theme='light'] .bg-amber-500\/10,
+:root[data-theme='light'] .bg-amber-950\/30 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+:root[data-theme='light'] .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+:root[data-theme='light'] .bg-sky-950\/30 {
+  background-color: rgba(14, 165, 233, 0.08) !important;
+}
+:root[data-theme='light'] .bg-red-950\/30 {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+}
+
+/* Severity foreground ink — slightly darker so they read on white. */
+:root[data-theme='light'] .text-rose-200,
+:root[data-theme='light'] .text-rose-100 {
+  color: #b91c1c !important;
+}
+:root[data-theme='light'] .text-amber-300,
+:root[data-theme='light'] .text-amber-200 {
+  color: #b45309 !important;
+}
+:root[data-theme='light'] .text-emerald-200,
+:root[data-theme='light'] .text-emerald-300,
+:root[data-theme='light'] .text-emerald-400 {
+  color: #047857 !important;
+}
+:root[data-theme='light'] .text-sky-200,
+:root[data-theme='light'] .text-sky-300 {
+  color: #0369a1 !important;
+}
+
+/* ===========================================================
+ * Custom widgets
+ * =========================================================== */
+:root[data-theme='light'] .hud-panel {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Scrollbars */
+:root[data-theme='light'] ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+:root[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+:root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: #6a2bba;
+}
+
+/* Selection */
+:root[data-theme='light'] ::selection {
+  background-color: rgba(106, 43, 186, 0.2);
+  color: #111827;
+}
